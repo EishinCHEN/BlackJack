@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21點</title>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.11.0/build/cssnormalize/cssnormalize-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="./BlackJack.css">
+</head>
+<body>
+    <main>
+        <section class="table">
+            <section class="title">
+                <h1>21點</h1>
+            </section>
+            <section class="dealer-zone">
+                <h2>莊家</h2>
+                <div class="deck">
+                    <div class="card"><span></span><div class="dealer-cards card-img" id="dealerCard1"></div></div>
+                    <div class="card"><span></span><div class="dealer-cards card-img" id="dealerCard2"></div></div>
+                    <div class="card"><span></span><div class="dealer-cards card-img" id="dealerCard3"></div></div>
+                    <div class="card"><span></span><div class="dealer-cards card-img" id="dealerCard4"></div></div>
+                    <div class="card"><span></span><div class="dealer-cards card-img" id="dealerCard5"></div></div>
+                </div>
+            </section>
+            <section class="player-zone">
+                <h2>玩家</h2>
+                <div class="deck">
+                    <div class="card"><span></span><div class="player-cards card-img" id="playerCard1"></div></div>
+                    <div class="card"><span></span><div class="player-cards card-img" id="playerCard2"></div></div>
+                    <div class="card"><span></span><div class="player-cards card-img" id="playerCard3"></div></div>
+                    <div class="card"><span></span><div class="player-cards card-img" id="playerCard4"></div></div>
+                    <div class="card"><span></span><div class="player-cards card-img" id="playerCard5"></div></div>
+                </div>
+            </section>
+            <section class="btn-area">
+                <input type="button" value="再來一張！" disabled>
+                <input type="button" value="跳過這輪！" disabled>
+                <input type="button" value="開始新遊戲" onclick="newGame()">
+            </section>
+        </section>
+    </main>
+    <script src="./BlackJack.js"></script>
+</body>
+</html>
