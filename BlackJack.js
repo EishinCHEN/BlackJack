@@ -11,7 +11,7 @@ document.getElementById("playerName").addEventListener("keyup",(event)=>{
 function initCards(){
     let allCards = document.getElementsByClassName("card-img");
     for(index in allCards){
-        allCards[index].innerHTML = "✡";
+        allCards[index].innerHTML = "✪";
     }
     let numbers = document.getElementsByClassName("value-zone");
     for(index in numbers){
