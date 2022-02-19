@@ -3,10 +3,44 @@
 }
 body{
     background-color: #ead6bd;
+    position: relative;
+}
+.begin{
+    background-color: #ead6bd;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+}
+.begin .outer{
+    border: 3px solid #40686a;
+    border-radius: 20px;
+    background-color: #40686a;
+    width: 40%;
+    box-sizing: border-box;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #915c4c;
+}
+.outer input{
+    border: 3px solid #ead6bd;
+    background-color: #ead6bd;
+    color: #915c4c;
+    border-radius: 10px;
+}
+.outer input , .outer label{
+    margin: 1rem;
 }
 .table{
     border: 10px solid #40686a;
     border-radius: 20px;
+    box-sizing: border-box;
     width: 60%;
     margin: 3rem auto;
     padding: 1rem;
@@ -14,6 +48,14 @@ body{
 }
 .title{
     text-align: center;
+}
+.score-area{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.score-area span{
+    padding: 1rem;
 }
 .deck{
     display: flex;
@@ -55,6 +97,41 @@ body{
     border-radius: 10px;
     padding: 0.3rem;
 }
+.winnerImg{
+    background-color: rgba(255,255,255,0.7);
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    display: flex;
+    justify-content: center;
+}
+.winner-outer{
+    border: 3px solid #40686a;
+    border-radius: 20px;
+    background-color: #40686a;
+    width: 40%;
+    box-sizing: border-box;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #915c4c;
+}
+.winner-outer p{
+    display: inline-block;
+    width: 50px;
+    text-align: center;
+}
+.winner-outer input{
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    border: 3px solid #915c4c;
+    background-color: #915c4c;
+    color: #ead6bd;
+}
 @media (max-width: 768px) {
     .table{
         width: 100%;
@@ -67,11 +144,23 @@ body{
         padding: 0.1rem;
         margin: 0 0.3rem;
     }
+    .begin{
+        width: 100%;
+    }
+    .begin .outer{
+        width: 80%;
+    }
+    .winner-outer{
+        width: 90%;
+    }
 }
 @media (max-width: 480px) {
     .table{
         width: 100%;
         margin: auto;
+    }
+    .card-img{
+        font-size: 45px;
     }
     .deck .card{
         box-sizing: border-box;
@@ -80,4 +169,7 @@ body{
         padding: 0.1rem;
         margin: 0 0.3rem;
     }
+}
+.displaynone{
+    display: none;
 }
