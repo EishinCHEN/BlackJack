@@ -41,7 +41,7 @@ function newGame(){
         document.getElementById("playerPoints").innerHTML = calcPoint(playerCards);
         document.getElementById("dealerPoints").innerHTML = calcPoint(dealerCards);
         if(calcPoint(playerCards) >= 21 || calcPoint(dealerCards) >= 21){
-            alert("gameover");
+            isWinner(playerCards,dealerCards);
         }else{
         //解除按鈕鎖定
         document.getElementById("hit").removeAttribute("disabled");
@@ -115,16 +115,20 @@ function hit(){
 //玩家跳過一輪
 function stand(){
     if(playerCards.length < 5 && dealerCards.length < 5){
-        while(true){
-            //若點數比玩家少，則繼續拿牌
-            if(calcPoint(dealerCards) < calcPoint(playerCards)){
-                dealerCards.push(deal());
-                renderCards();
-                document.getElementById("dealerPoints").innerHTML = calcPoint(dealerCards);
-            }else{
-                break;
-            }
-        }   
+        if(calcPoint(dealerCards) > 17){
+            alert("玩家此次不需拿牌");     
+        }else{
+            while(true){
+                //若點數比玩家少，則繼續拿牌
+                if(calcPoint(dealerCards) < 17){
+                    dealerCards.push(deal());
+                    renderCards();
+                    document.getElementById("dealerPoints").innerHTML = calcPoint(dealerCards);
+                }else{
+                    break;
+                }
+            }   
+        }
     } 
     isWinner(playerCards,dealerCards);
 }
