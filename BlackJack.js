@@ -1,218 +1,231 @@
-let playerName = null;
-let deck = [];
+import Deck from './Deck.js';
+import GameUI from './GameUI.js';
+
+// 遊戲狀態
+let playerName = "";
+let playerMoney = 1000;
+let dealerMoney = 1000;
+let currentBet = 0;
+
+let deck = null;
 let dealerCards = [];
 let playerCards = [];
-document.getElementById("playerName").addEventListener("keyup",(event)=>{
-    if(event.keyCode === 13){
-        newGame();
-    }
-})
-//初始化卡片圖案
-function initCards(){
-    let allCards = document.getElementsByClassName("card-img");
-    for(index in allCards){
-        allCards[index].innerHTML = "✪";
-    }
-    let numbers = document.getElementsByClassName("value-zone");
-    for(index in numbers){
-        numbers[index].innerHTML = "";
-    }
-}
-//新遊戲
-function newGame(){
-    playerName = document.getElementById("playerName").value;
-    if(playerName){
-        initCards();
-        document.getElementById("winnerImg").classList.add("displaynone");
-        document.getElementById("pName").innerHTML = playerName;
-        document.getElementById("begin").classList.add("displaynone");
-        //清除上一局卡牌
-        dealerCards = [];
-        playerCards = [];
-        //清除上一局畫面
-        initCards();
-        //發牌
-        playerCards.push(deal());
-        dealerCards.push(deal());
-        playerCards.push(deal());
-        //渲染牌面
-        renderCards();
-        //渲染點數
-        document.getElementById("playerPoints").innerHTML = calcPoint(playerCards);
-        document.getElementById("dealerPoints").innerHTML = calcPoint(dealerCards);
-        if(calcPoint(playerCards) >= 21 || calcPoint(dealerCards) >= 21){
-            isWinner(playerCards,dealerCards);
-        }else{
-        //解除按鈕鎖定
-        document.getElementById("hit").removeAttribute("disabled");
-        document.getElementById("stand").removeAttribute("disabled");
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// 初始化事件監聽
+// 使用DOMContentLoaded確保DOM載入完成才註冊事件監聽
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("newGame")?.addEventListener("click", initGame);
+    document.getElementById("restart")?.addEventListener("click", handleRestart);
+    
+    // 綁定下注按鈕
+    document.getElementById("startBetBtn")?.addEventListener("click", dealHand);
+
+    document.getElementById("hit")?.addEventListener("click", hit);
+    document.getElementById("stand")?.addEventListener("click", stand);
+
+    // 規則彈窗事件綁定
+    document.getElementById("rulesBtnHome")?.addEventListener("click", () => toggleRulesModal(true));
+    document.getElementById("rulesBtnGame")?.addEventListener("click", () => toggleRulesModal(true));
+    document.getElementById("closeRulesBtn")?.addEventListener("click", () => toggleRulesModal(false));
+
+    document.getElementById("playerName")?.addEventListener("keyup", (event) => {
+        if (event.key === "Enter" || event.keyCode === 13) {
+            initGame();
         }
-    }else{
-        alert("請輸入玩家名字");
+    });
+});
+
+// 控制規則彈窗的開關
+function toggleRulesModal(show) {
+    const rulesModal = document.getElementById("rulesModal");
+    if (show) {
+        rulesModal?.classList.remove("displaynone");
+    } else {
+        rulesModal?.classList.add("displaynone");
     }
 }
-//建立牌組
-function buildDeck(){
-    for(let suit = 1 ; suit <= 4 ; suit++){
-        for(let number = 1 ; number <= 13 ; number++){
-            let card = new Card(suit,number)
-            deck.push(card);
-        }
+
+// 初始化整場遊戲（重置 $1000）
+function initGame() {
+    const nameInput = document.getElementById("playerName")?.value.trim();
+    if (!nameInput) return alert("請輸入玩家名字");
+
+    playerName = nameInput;
+    playerMoney = 1000;
+    dealerMoney = 1000;
+
+    GameUI.updateMoney(playerMoney, dealerMoney);
+    document.getElementById("begin")?.classList.add("displaynone");
+    document.getElementById("pName").innerText = playerName;
+
+    startNextRound();
+}
+
+// 開始新的一局
+async function startNextRound() {
+    // 隱藏結算圖、顯示下注區塊
+    document.getElementById("winnerImg")?.classList.add("displaynone");
+
+    // 清空舊牌面與點數
+    GameUI.initCards();
+    GameUI.updatePoints("", "");
+
+    // 顯示下注彈窗，並更新輸入框最大值為當前籌碼
+    const betInput = document.getElementById("roundBet");
+    if (betInput) betInput.max = playerMoney;
+    
+    document.getElementById("betZone")?.classList.remove("displaynone");
+    
+    // 停用遊戲按鈕
+    GameUI.setButtonsDisabled(true);
+}
+
+// 點擊「下注並開局」按鈕觸發
+async function dealHand() {
+    const betInput = document.getElementById("roundBet");
+    let bet = parseInt(betInput?.value || 100);
+
+    if (isNaN(bet) || bet <= 0) {
+        alert("請輸入有效的下注金額！");
+        return;
     }
-    return deck;
-}
-//洗牌 https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-function shuffle(array) {
-    let currentIndex = array.length,  randomIndex;
-  
-    // While there remain elements to shuffle...
-    while (currentIndex != 0) {
-  
-      // Pick a remaining element...
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-  
-      // And swap it with the current element.
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
+    if (bet > playerMoney) {
+        alert("籌碼不足！已調整為剩餘籌碼");
+        bet = playerMoney;
+        if (betInput) betInput.value = bet;
     }
-  
-    return array;
-}  
-//發牌
-function deal(){
-    deck = shuffle(buildDeck());
-    return deck.shift();
-}
-//渲染牌面
-function renderCards(){
-    playerCards.forEach((c,i)=>{
-        let cards = document.getElementById(`playerCard${i+1}`);
-        let num = document.getElementById(`playerCard${i+1}`).previousSibling;
-        cards.innerHTML = c.cardSuit();
-        num.innerHTML = c.cardNumber();
-    })
-    dealerCards.forEach((c,i)=>{
-        let cards = document.getElementById(`dealerCard${i+1}`);
-        let num = document.getElementById(`dealerCard${i+1}`).previousSibling;
-        cards.innerHTML = c.cardSuit();
-        num.innerHTML = c.cardNumber();
-    })
-}
-//玩家再來一張！
-function hit(){
-    if(playerCards.length < 5 && dealerCards.length < 5){
-        playerCards.push(deal());
-        renderCards();
-        document.getElementById("playerPoints").innerHTML = calcPoint(playerCards);
-        if(calcPoint(playerCards) >= 21 || calcPoint(dealerCards) >= 21){
-            document.getElementById("hit").setAttribute("disabled","");
-            document.getElementById("stand").setAttribute("disabled","");
-        }
+
+    currentBet = bet;
+
+    // 隱藏下注區，開始發牌
+    document.getElementById("betZone")?.classList.add("displaynone");
+
+    // 洗牌與發牌
+    deck = new Deck();
+    deck.shuffle();
+    dealerCards = [];
+    playerCards = [];
+
+    playerCards.push(deck.deal());
+    dealerCards.push(deck.deal());
+    playerCards.push(deck.deal());
+
+    GameUI.renderCards(playerCards, dealerCards);
+    GameUI.updatePoints(Deck.calcPoint(playerCards), Deck.calcPoint(dealerCards));
+
+    if (Deck.calcPoint(playerCards) >= 21) {
+        await sleep(1000);
+        checkResult(true);
+    } else {
+        GameUI.setButtonsDisabled(false);
     }
-    isWinner(playerCards,dealerCards);
 }
-//玩家跳過一輪
-function stand(){
-    if(playerCards.length < 5 && dealerCards.length < 5){
-        if(calcPoint(dealerCards) > 17){
-            alert("玩家此次不需拿牌");     
-        }else{
-            while(true){
-                //若點數比玩家少，則繼續拿牌
-                if(calcPoint(dealerCards) < 17){
-                    dealerCards.push(deal());
-                    renderCards();
-                    document.getElementById("dealerPoints").innerHTML = calcPoint(dealerCards);
-                }else{
-                    break;
-                }
-            }   
-        }
-    } 
-    isWinner(playerCards,dealerCards);
-}
-//計算點數
-function calcPoint(deck){
-    let point = 0;
-    deck.forEach((p)=>point+=p.cardValue());
-    console.log(point);
-    if(point > 21){
-        console.log("超過21點了")
-        deck.forEach(p=>{
-                if(p.cardNumber() === "A"){
-                    console.log("你有A");
-                    point -= 10;
-            }
-        })
-    }
-    return point;
-}
-//找出贏家
-function isWinner(playerCards, dealerCards){
-    let pPoint = calcPoint(playerCards);
-    let dPoint = calcPoint(dealerCards);
-    document.getElementById("namespace").innerHTML = playerName;
-    document.getElementById("playerPoint").innerHTML = pPoint;
-    document.getElementById("dealerPoint").innerHTML = dPoint;
-    if(pPoint >= 21 || dPoint >= 21){
-        document.getElementById("winnerImg").classList.remove("displaynone");
-        document.getElementById("hit").setAttribute("disabled","");
-        document.getElementById("stand").setAttribute("disabled","");
-        if(pPoint == 21 || dPoint > 21){
-            document.getElementById("winnerName").innerHTML = playerName+" 贏了！";
-        }else if(dPoint == 21 || pPoint > 21){
-            document.getElementById("winnerName").innerHTML = "莊家 贏了！";
-        }else if(dPoint == dPoint){
-            document.getElementById("winnerName").innerHTML = "平手";
-        }else if(playerCards.length == 5 || dealerCards.length == 5){
-            (pPoint < 21 )? document.getElementById("winnerName").innerHTML = playerName+"贏了" : document.getElementById("winnerName").innerHTML = "莊家贏了";
+
+// 玩家補牌
+async function hit() {
+    if (playerCards.length < 5) {
+        playerCards.push(deck.deal());
+        GameUI.renderCards(playerCards, dealerCards);
+        
+        const pPoint = Deck.calcPoint(playerCards);
+        const dPoint = Deck.calcPoint(dealerCards);
+        GameUI.updatePoints(pPoint, dPoint);
+
+        // 超過21點或抽滿 5 張即結束
+        if (pPoint >= 21 || playerCards.length === 5) {
+            GameUI.setButtonsDisabled(true);
+            await sleep(1000); // 停頓 1 秒讓玩家看清這張抽到的牌
+            checkResult(true);
         }
     }
 }
-//卡牌模型
-class Card {
-    constructor(suit,number){
-        this.suit = suit;
-        this.number = number;
+
+// 玩家停牌 (莊家自動補牌)
+async function stand() {
+    GameUI.setButtonsDisabled(true);
+
+    // 莊家未滿 17 點且少於 5 張牌時持續補牌
+    while (Deck.calcPoint(dealerCards) < 17 && dealerCards.length < 5) {
+        await sleep(800); // 每拿一張牌前等待 0.8 秒
+
+        dealerCards.push(deck.deal());
+
+        GameUI.renderCards(playerCards, dealerCards);
+        GameUI.updatePoints(Deck.calcPoint(playerCards), Deck.calcPoint(dealerCards));
     }
-    cardNumber(){
-        switch(this.number){
-            case 1:
-                return "A";
-            case 11:
-                return "J";
-            case 12:
-                return "Q";
-            case 13:
-                return "K";
-            default:
-                return this.number;
-        }
+
+    await sleep(1200);
+    checkResult(true);
+}
+
+// 結算與籌碼轉移
+function checkResult(gameOver) {
+    if (!gameOver) return;
+
+    GameUI.setButtonsDisabled(true);
+
+    const pPoint = Deck.calcPoint(playerCards);
+    const dPoint = Deck.calcPoint(dealerCards);
+    const pLen = playerCards.length;
+    const dLen = dealerCards.length;
+
+    let winnerText = "";
+    let result = ""; // 內容為 "win", "lose", "push"
+
+    if (pPoint > 21) {
+        winnerText = `${playerName}超過21點，莊家贏了！`;
+        result = "lose";
+    } else if (dPoint > 21) {
+        winnerText = `莊家超過21點，${playerName}贏了！`;
+        result = "win";
+    } else if (pLen === 5) {
+        winnerText = `${playerName} 5 張牌獲勝！`;
+        result = "win";
+    } else if (dLen === 5) {
+        winnerText = "莊家 5 張牌獲勝！";
+        result = "lose";
+    } else if (pPoint > dPoint) {
+        winnerText = `${playerName} 贏了！`;
+        result = "win";
+    } else if (dPoint > pPoint) {
+        winnerText = "莊家 贏了！";
+        result = "lose";
+    } else {
+        winnerText = "平手！";
+        result = "push";
     }
-    //計算點數
-    cardValue(){
-        switch(this.number){
-            case 1:
-                return 11;
-            case 11:
-            case 12:
-            case 13:
-                return 10;
-            default:
-                return this.number;
-        }
+
+    // 結算金錢
+    if (result === "win") {
+        playerMoney += currentBet;
+        dealerMoney -= currentBet;
+        winnerText += `\n贏得 $${currentBet}`;
+    } else if (result === "lose") {
+        playerMoney -= currentBet;
+        dealerMoney += currentBet;
+        winnerText += `\n損失 $${currentBet}`;
     }
-    cardSuit(){
-        switch(this.suit){
-            case 1:
-                return "♠";
-            case 2:
-                return "♣";
-            case 3:
-                return "♥";
-            case 4:
-                return "♦";
-        }
+
+    GameUI.updateMoney(playerMoney, dealerMoney);
+
+    // 檢查是否破產
+    const isBankrupt = playerMoney <= 0 || dealerMoney <= 0;
+    if (playerMoney <= 0) winnerText = `${playerName}籌碼歸零，徹底破產！`;
+    if (dealerMoney <= 0) winnerText = "莊家籌碼歸零，莊家破產！";
+
+    GameUI.showWinner(winnerText, playerName, pPoint, dPoint, isBankrupt);
+}
+
+// 彈出視窗按鈕
+function handleRestart() {
+    if (playerMoney <= 0 || dealerMoney <= 0) {
+        // 破產時重新回到首頁重置籌碼
+        document.getElementById("winnerImg")?.classList.add("displaynone");
+        document.getElementById("begin")?.classList.remove("displaynone");
+    } else {
+        // 未破產繼續下一局
+        startNextRound();
     }
 }
